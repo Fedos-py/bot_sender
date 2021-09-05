@@ -1,12 +1,9 @@
 from constants import *
-from time_sender import *
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 phrases = ['Правда {}?', 'Точно {}?', 'Ты сказал {}?', 'Вы сказали {}?', 'Вы уверены, что {}?', 'Ты уверен, что {}?']
-status = True
-
 
 # Авторизуемся как сообщество
 
@@ -19,8 +16,6 @@ def write_msg(peer_id, message, attachment=''):
 
 # Основной цикл
 def run():
-    if status:
-        run_sender()
     while True:
         longpoll = VkBotLongPoll(vk, 206863393)
         try:
@@ -32,20 +27,32 @@ def run():
                         if len(event.object.text.split(' ')) == 2:
                             arg = event.object.text.split(' ')[1]
                             if arg == '0':
-                                status = False
-                                print(status)
-                                # set_status_off()
+                                o = open('status.txt', 'w')
+                                o.write('False')
+                                o.close()
                                 write_msg(event.object.peer_id, 'Вы выключили автобота')
                             elif arg == '1':
-                                status = True
-                                print(status)
-                                # set_status_on()
+                                o = open('status.txt', 'w')
+                                o.write('True')
+                                o.close()
                                 write_msg(event.object.peer_id, 'Вы включили автобота')
                             else:
                                 write_msg(event.object.peer_id, 'invalid argument (укажите цифру 0 или 1)')
                         else:
                             write_msg(event.object.peer_id, 'invalid argument (укажите аргумент)')
+                    if event.object.text.split(' ')[0] == '/tt':
+                        o = open('timetable.txt')
+                        timetable = o.read().split('\n')
+                        o.close()
+                        write_msg(event.object.peer_id, f'Расписание: {timetable}')
+                    if event.object.text.split(' ')[0] == '/gs':
+                        o = open('status.txt')
+                        status = o.read()
+                        o.close()
+                        write_msg(event.object.peer_id, f'Статус: {status}')
                     else:
                         write_msg(event.object.peer_id, random.choice(phrases).format(event.object.text))
         except Exception as e:
             print(e)
+
+run()
